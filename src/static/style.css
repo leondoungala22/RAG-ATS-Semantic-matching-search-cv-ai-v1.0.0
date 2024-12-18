@@ -1,0 +1,352 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f7fc;
+    color: #212529;
+    overflow: hidden; /* Prevent horizontal and vertical scrolling */
+}
+
+/* Full Screen Container */
+.container {
+    width: 100%;
+    max-width: 1920px;
+    margin: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-y: auto; /* Allow vertical scrolling inside the container if content overflows */
+}
+
+/* Header Styling */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(90deg, #004085, #0056b3);
+    color: #ffffff;
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 28px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+header h1 i {
+    font-size: 30px;
+}
+
+#newSearchButton {
+    background: linear-gradient(90deg, #ffa502, #e67e00);
+    color: #ffffff;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#newSearchButton:hover {
+    background: #cc6d00;
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(204, 109, 0, 0.3);
+}
+
+/* Search Section */
+#search-container {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    border: 1px solid #dcdcdc;
+}
+
+#search-container h2 {
+    font-size: 22px;
+    color: #004085;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+textarea {
+    width: 100%;
+    height: 120px;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #ced4da;
+    font-size: 16px;
+    margin-bottom: 15px;
+    resize: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+textarea:focus {
+    border-color: #004085;
+    box-shadow: 0 0 10px rgba(0, 64, 133, 0.2);
+}
+
+.primary-btn {
+    background-color: #004085;
+    color: #ffffff;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    width: 100%;
+}
+
+.primary-btn:hover {
+    background-color: #002c62;
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0, 64, 133, 0.3);
+}
+
+/* Results Section Layout */
+.results-layout {
+    display: flex;
+    gap: 20px;
+    flex-grow: 1;
+    height: calc(100vh - 260px);
+    overflow-y: auto; /* Allow scroll in results section if needed */
+}
+
+/* Candidate Overview Styling */
+.overview-container {
+    flex: 1;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    border: 1px solid #dcdcdc;
+    overflow-y: auto;
+}
+
+.overview-container h2 {
+    font-size: 20px;
+    font-weight: bold;
+    color: #004085;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #004085;
+    padding-bottom: 5px;
+}
+
+/* Candidate CV Section */
+.details-container {
+    flex: 1;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    border: 1px solid #dcdcdc;
+    overflow-y: auto;
+}
+
+.details-container h2 {
+    font-size: 20px;
+    font-weight: bold;
+    color: #004085;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #004085;
+    padding-bottom: 5px;
+}
+
+#cvDetailsContent {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333333;
+}
+
+#cvDetailsContent h3 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #004085;
+}
+
+#cvDetailsContent p {
+    margin-bottom: 10px;
+}
+
+/* CV Section Styles */
+.cv-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cv-section h3 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #004085;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+
+.cv-section ul {
+    margin: 10px 0 0 20px;
+    padding: 0;
+    list-style-type: disc;
+}
+
+.cv-section ul li {
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 5px;
+}
+
+.cv-section p {
+    margin: 5px 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.cv-section strong {
+    color: #212529;
+}
+
+/* Action Buttons inside Table */
+.actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.actions button {
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    width: auto;
+}
+
+.actions button.primary-btn {
+    background: #004085;
+    color: #ffffff;
+    border: none;
+}
+
+.actions button.primary-btn:hover {
+    background: #002c62;
+}
+
+.actions button.secondary-btn {
+    background: #ffa502;
+    color: #ffffff;
+    border: none;
+}
+
+.actions button.secondary-btn:hover {
+    background: #cc6d00;
+}
+
+/* Error Message */
+.error-message {
+    color: red;
+    font-size: 18px;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #004085;
+    color: #ffffff;
+    border-radius: 10px;
+    margin-top: 20px;
+    font-size: 16px;
+}
+
+/* DataTable Custom Styling */
+.dataTables_filter,
+.dataTables_length {
+    margin-bottom: 15px;
+}
+
+.dataTables_filter input,
+.dataTables_length select {
+    padding: 8px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+}
+.degree {
+    margin-bottom: 15px;
+}
+
+.degree h4 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #004085;
+}
+
+.degree p {
+    font-size: 14px;
+    margin: 5px 0;
+}
+
+.section-separator {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 10px 0;
+}
+
+h5 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 20px;
+    color: #0056b3;
+}
+
+ul {
+    padding-left: 20px;
+}
+
+ul li {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* Animation for the Table */
+@keyframes tableAnimation {
+    0% {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

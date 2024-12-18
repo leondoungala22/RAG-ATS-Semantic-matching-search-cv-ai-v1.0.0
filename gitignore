@@ -1,0 +1,22 @@
+# Define the .gitignore content
+$gitignoreContent = @"
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.yml
+.Python
+.env
+.vscode
+.DS_STORE
+.conda
+env/
+env.bak/
+venv.bak/
+src/utils/__pycache__
+src/retriever/__pycache__
+src/embedding/__pycache__
+src/augmenter/__pycache__
+environment.yml
+"@
+
