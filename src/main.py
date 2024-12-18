@@ -23,7 +23,7 @@ cv_retriever = CVRetrieverApp()
 @app.route('/')
 def index():
     """
-    Render the main search page with an empty result set.
+    Render the main search page with an empty result set.. 
     """
     return render_template('index.html', has_results=False, results=[])
 
