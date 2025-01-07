@@ -1,7 +1,3 @@
-Here’s the updated and polished `README.md` with your contact details:
-
----
-
 # **RAG-ATS Semantic Matching Search CV AI v1.0.0**  
 > **An AI-powered Applicant Tracking System (ATS)** leveraging **Retrieval-Augmented Generation (RAG)** and semantic search to streamline CV analysis and improve talent acquisition workflows.
 
