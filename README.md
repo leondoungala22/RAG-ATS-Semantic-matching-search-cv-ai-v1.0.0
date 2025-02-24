@@ -3,13 +3,13 @@
 
 ---
 
-## 🌟 **Key Features**
+## **Key Features**
 
 - **🔍 Semantic Matching:** AI-powered search to match job descriptions with CVs intelligently.
-- **📄 CV Parsing:** Automatically extracts and structures data from CVs for analysis.
-- **📊 Candidate Ranking:** Ranks CVs by relevance to job descriptions using advanced embeddings.
-- **💾 Database Integration:** Stores CVs and structured data in **Azure Cosmos DB** and attachments in **MySQL**.
-- **🌐 Web Interface:** A user-friendly web application to upload, search, and view CVs dynamically.
+- ** CV Parsing:** Automatically extracts and structures data from CVs for analysis.
+- ** Candidate Ranking:** Ranks CVs by relevance to job descriptions using advanced embeddings.
+- ** Database Integration:** Stores CVs and structured data in **Azure Cosmos DB** and attachments in **MySQL**.
+- ** Web Interface:** A user-friendly web application to upload, search, and view CVs dynamically.
 
 ---
 
