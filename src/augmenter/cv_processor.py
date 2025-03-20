@@ -1,60 +1,86 @@
 import os
 import sys
-
-# Get the absolute path of the project's root directory (relative to this file)
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
-# Add the project root to the Python path
-if project_root not in sys.path:
-    sys.path.append(project_root)
-
 import json
-import fitz  # PyMuPDF for PDF text extraction
-import requests
-from dotenv import load_dotenv
-from anthropic import Anthropic
-from utils.logger import get_logger
-from uuid import uuid4
+import re
+import psycopg2
+import fitz  # PyMuPDF
+import uuid
 import shutil
+import logging
+from dotenv import load_dotenv
+from pdf2image import convert_from_path
+import easyocr
+import numpy as np
+from PIL import Image
 
 # Load environment variables
 load_dotenv()
-anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-# Configure logging
-log = get_logger("CVProcessor")
+# PostgreSQL Credentials
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+POSTGRES_DB = os.getenv("POSTGRES_DB")
 
-# Local storage paths
-LOCAL_JSON_STORAGE = "src/data/cv_json"
-REJECTED_FOLDER = "src/data/cv_rejected"
+if not all([POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB]):
+    raise ValueError("❌ Missing PostgreSQL environment variables. Check your .env file.")
 
-# Ensure directories exist
-os.makedirs(LOCAL_JSON_STORAGE, exist_ok=True)
-os.makedirs(REJECTED_FOLDER, exist_ok=True)
-
+# Configure Logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+log = logging.getLogger("CVProcessor")
 
 class CVProcessor:
-    def __init__(self, model="claude-3-5-haiku-20241022"):
+    def __init__(self):
         """
-        Initializes the CVProcessor with the specified Anthropic Claude model.
+        Initializes the CVProcessor and ensures PostgreSQL connectivity.
         """
-        self.model = model
-        log.info("CVProcessor initialized with model: %s", model)
+        log.info("🚀 Initializing CVProcessor...")
+
+        try:
+            self.pg_conn = psycopg2.connect(
+                dbname=POSTGRES_DB,
+                user=POSTGRES_USER,
+                password=POSTGRES_PASSWORD,
+                host=POSTGRES_HOST,
+                port=POSTGRES_PORT
+            )
+            self.ensure_attachments_table_exists()
+            log.info("✅ Successfully connected to PostgreSQL.")
+        except Exception as e:
+            log.critical(f"❌ PostgreSQL connection failed: {e}")
+            raise RuntimeError("Database connection failed.")
+
+    def ensure_attachments_table_exists(self):
+        """
+        Ensures the 'attachments' table exists in PostgreSQL.
+        """
+        try:
+            cursor = self.pg_conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS attachments (
+                    id UUID PRIMARY KEY,
+                    filename TEXT NOT NULL,
+                    pdf BYTEA NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+            """)
+            self.pg_conn.commit()
+            cursor.close()
+            log.info("✅ PostgreSQL table 'attachments' ensured to exist.")
+        except Exception as e:
+            log.error(f"❌ Error ensuring PostgreSQL table exists: {e}")
+            raise
 
     def process_cvs_in_folder(self, pdf_folder):
         """
-        Processes all PDF files in a folder and saves structured CVs as JSON files locally.
+        Processes all PDF files in a given folder.
         """
         pdf_files = [f for f in os.listdir(pdf_folder) if f.endswith(".pdf")]
-        
-        log.info(f"Found {len(pdf_files)} PDF files in {pdf_folder}: {pdf_files}")
-
-        if not pdf_files:
-            log.warning("No PDF files found. Please check the folder path and file extensions.")
 
         for filename in pdf_files:
             try:
-                log.info(f"Processing file: {filename}")
+                log.info(f"📄 Processing file: {filename}")
                 pdf_path = os.path.join(pdf_folder, filename)
                 extracted_text = self.extract_text_from_pdf(pdf_path)
 
@@ -66,134 +92,133 @@ class CVProcessor:
                 if "error" in structured_cv:
                     raise ValueError(f"Error creating structured CV for file '{filename}'")
 
-                log.info(f"Successfully processed and saved CV from file: {filename}")
-
+                log.info(f"✅ Successfully processed and saved CV from file: {filename}")
             except Exception as e:
-                log.warning(f"Error with file '{filename}': {e}. Moving to rejected folder.")
+                log.warning(f"⚠️ Error with file '{filename}': {e}. Moving to rejected folder.")
                 self.process_and_move_rejected(pdf_path, str(e))
 
     def extract_text_from_pdf(self, pdf_path):
         """
-        Extracts text from a PDF file.
+        Extracts text from a PDF file, combining text from all pages.
+        Uses both text extraction and OCR if needed.
         """
         try:
-            log.info(f"Extracting text from PDF: {pdf_path}")
+            log.info(f"🔍 Extracting text from PDF: {pdf_path}")
+            reader = easyocr.Reader(["en"])  
             doc = fitz.open(pdf_path)
-            text = "\n".join(page.get_text() for page in doc)
+            text = ""
+
+            for page_num in range(len(doc)):
+                page = doc.load_page(page_num)
+                page_text = page.get_text()
+
+                if page_text.strip():
+                    text += page_text
+                else:
+                    log.warning(f"⚠️ No text found on page {page_num + 1}. Attempting OCR.")
+                    pix = page.get_pixmap()
+                    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                    ocr_text = reader.readtext(np.array(img), detail=0)
+                    text += " ".join(ocr_text)
+
             doc.close()
-            
-            log.info(f"Extracted {len(text)} characters from {pdf_path}")
 
             if not text.strip():
-                log.warning(f"No text extracted from {pdf_path}. The PDF might be a scanned document.")
+                raise ValueError("No text extracted from PDF")
 
+            log.info(f"✅ Successfully extracted text from PDF: {pdf_path}")
             return text.strip()
+
         except Exception as e:
-            log.error(f"Error extracting text from PDF {pdf_path}: {e}")
+            log.error(f"❌ Error extracting text from PDF {pdf_path}: {e}")
             raise RuntimeError(f"Error extracting text from PDF: {e}")
 
-    def create_structured_cv(self, extracted_text, filename, pdf_path):
+    def save_pdf_to_postgres(self, cv_id, pdf_path):
         """
-        Calls Anthropic AI to generate a structured CV and saves it locally as JSON.
-        """
-        log.info(f"Creating structured CV for {filename}")
-
-        if not extracted_text.strip():
-            log.warning(f"Extracted text is empty for '{filename}'. Skipping processing.")
-            self.process_and_move_rejected(pdf_path, "Empty CV text")
-            return {"error": "Empty CV text"}
-
-        prompt = f"Extract structured CV information from the following text:\n\n{extracted_text[:500]}"  # First 500 chars only
-
-        log.info("Sending prompt to Anthropic API...")
-        try:
-            response = self.call_anthropic(prompt)
-
-            if not response or "error" in response:
-                self.process_and_move_rejected(pdf_path, "Invalid CV format")
-                return {"error": "Invalid CV data"}
-
-            # Generate or use existing CV ID
-            cv_id = response.get('id', str(uuid4()))
-            response['id'] = cv_id
-
-            # Save the structured CV locally
-            self.save_json_locally(response, filename)
-
-            log.info(f"Structured CV saved successfully for {filename}")
-
-            return response
-
-        except Exception as e:
-            log.error(f"Error creating structured CV: {e}")
-            self.process_and_move_rejected(pdf_path, str(e))
-            return {"error": f"Error: {e}"}
-
-    def call_anthropic(self, prompt):
-        """
-        Calls the Anthropic Claude API with the given prompt.
+        Saves the CV PDF as binary data into PostgreSQL.
         """
         try:
-            response = anthropic_client.messages.create(
-                model=self.model,
-                max_tokens=8000,
-                temperature=0.2,
-                system="Extract structured data.",
-                messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}]
+            cursor = self.pg_conn.cursor()
+            with open(pdf_path, 'rb') as file:
+                binary_data = file.read()
+
+            cursor.execute(
+                "INSERT INTO attachments (id, filename, pdf) VALUES (%s, %s, %s) "
+                "ON CONFLICT (id) DO NOTHING;",
+                (cv_id, os.path.basename(pdf_path), psycopg2.Binary(binary_data))
             )
+            self.pg_conn.commit()
+            cursor.close()
+            log.info(f"✅ CV PDF saved in PostgreSQL for ID: {cv_id}")
 
-            return json.loads(response.content[0].text)
         except Exception as e:
-            log.error(f"Anthropic API call failed: {e}")
-            return {"error": str(e)}
+            log.error(f"❌ Failed to save attachment to PostgreSQL: {e}")
+            raise RuntimeError("Error saving CV PDF to PostgreSQL.")
 
-    def save_json_locally(self, content, filename):
+    def save_json_locally(self, cv_id, content):
         """
-        Saves structured CV data as a JSON file in a local folder.
+        Saves the structured CV as a JSON file locally.
         """
         try:
-            json_path = os.path.join(LOCAL_JSON_STORAGE, f"{filename}.json")
+            os.makedirs("cv_storage", exist_ok=True)
+            json_path = os.path.join("cv_storage", f"{cv_id}.json")
+
             with open(json_path, "w", encoding="utf-8") as json_file:
                 json.dump(content, json_file, ensure_ascii=False, indent=4)
 
-            log.info(f"Saved structured CV to {json_path}")
+            log.info(f"✅ Structured CV saved locally at {json_path}")
 
         except Exception as e:
-            log.error(f"Failed to save JSON for {filename}: {e}")
-            raise RuntimeError(f"Error saving JSON file: {e}")
+            log.error(f"❌ Error saving JSON locally: {e}")
 
-    def process_and_move_rejected(self, file_path, error_msg=None):
+    def create_structured_cv(self, extracted_text, filename, cv_path):
         """
-        Move CV to the rejected folder if processing fails.
+        Generates a structured CV and saves it to PostgreSQL and local storage.
+        """
+        if not extracted_text.strip():
+            log.warning(f"⚠️ Extracted text is empty for file '{filename}'. Skipping processing.")
+            self.process_and_move_rejected(cv_path, "Empty CV text")
+            return {"error": "Empty CV text"}
 
-        Args:
-            file_path (str): The path of the file to move.
-            error_msg (str): The error message describing why the file was rejected.
-        """
         try:
-            rejected_path = os.path.join(REJECTED_FOLDER, os.path.basename(file_path))
-            shutil.move(file_path, rejected_path)
-            log.warning(f"Moved rejected file '{file_path}' to {REJECTED_FOLDER}: {error_msg}")
-        except Exception as e:
-            log.error(f"Failed to move rejected file '{file_path}': {e}")
+            # Generate unique CV ID
+            cv_id = str(uuid.uuid4())
 
+            structured_cv = {
+                "id": cv_id,
+                "filename": filename,
+                "text": extracted_text
+            }
+
+            # Save JSON locally
+            self.save_json_locally(cv_id, structured_cv)
+
+            # Save PDF to PostgreSQL
+            self.save_pdf_to_postgres(cv_id, cv_path)
+
+            log.info(f"✅ Successfully processed and saved CV: {filename}")
+            return structured_cv
+
+        except Exception as e:
+            log.error(f"❌ Error creating structured CV for file '{filename}': {e}")
+            self.process_and_move_rejected(cv_path, str(e))
+            return {"error": f"Structured CV creation failed: {str(e)}"}
+
+    def process_and_move_rejected(self, file_path, error_msg):
+        """
+        Move rejected CVs to `cv_rejected/` folder.
+        """
+        rejected_folder = "cv_rejected"
+        os.makedirs(rejected_folder, exist_ok=True)
+
+        try:
+            shutil.move(file_path, os.path.join(rejected_folder, os.path.basename(file_path)))
+            log.warning(f"⚠️ Moved rejected file '{file_path}' to {rejected_folder} due to error: {error_msg}")
+        except Exception as e:
+            log.error(f"❌ Failed to move rejected file '{file_path}': {e}")
 
 if __name__ == "__main__":
-    log.info("Starting CV processing pipeline.")
-
-    try:
-        processor = CVProcessor()
-    except Exception as e:
-        log.critical(f"Initialization failed: {e}")
-        raise
-
-    folder_path = "src/data/cv"
-
-    try:
-        log.info("Processing PDFs for structured CV generation...")
-        processor.process_cvs_in_folder(folder_path)
-        log.info("PDF processing completed.")
-    except Exception as e:
-        log.error(f"Processing error: {e}")
-
-    log.info("Pipeline execution finished.")
+    log.info("🚀 Starting CV processing pipeline.")
+    processor = CVProcessor()
+    processor.process_cvs_in_folder("src/data/cv")
+    log.info("✅ Pipeline execution finished.")
