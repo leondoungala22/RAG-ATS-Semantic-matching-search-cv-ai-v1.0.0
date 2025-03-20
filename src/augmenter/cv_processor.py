@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-import re
 import psycopg2
 import fitz  # PyMuPDF
 import uuid
@@ -58,7 +57,7 @@ class CVProcessor:
         try:
             cursor = self.pg_conn.cursor()
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS attachments (
+                CREATE TABLE IF NOT EXISTS cv_attachment (
                     id UUID PRIMARY KEY,
                     filename TEXT NOT NULL,
                     pdf BYTEA NOT NULL,
@@ -67,7 +66,7 @@ class CVProcessor:
             """)
             self.pg_conn.commit()
             cursor.close()
-            log.info("✅ PostgreSQL table 'attachments' ensured to exist.")
+            log.info("✅ PostgreSQL table 'cv_attachment' ensured to exist.")
         except Exception as e:
             log.error(f"❌ Error ensuring PostgreSQL table exists: {e}")
             raise
@@ -143,7 +142,7 @@ class CVProcessor:
                 binary_data = file.read()
 
             cursor.execute(
-                "INSERT INTO attachments (id, filename, pdf) VALUES (%s, %s, %s) "
+                "INSERT INTO cv_attachment (id, filename, pdf) VALUES (%s, %s, %s) "
                 "ON CONFLICT (id) DO NOTHING;",
                 (cv_id, os.path.basename(pdf_path), psycopg2.Binary(binary_data))
             )
@@ -157,11 +156,12 @@ class CVProcessor:
 
     def save_json_locally(self, cv_id, content):
         """
-        Saves the structured CV as a JSON file locally.
+        Saves the structured CV as a JSON file locally in `src/data/cv_json/`.
         """
         try:
-            os.makedirs("cv_storage", exist_ok=True)
-            json_path = os.path.join("cv_storage", f"{cv_id}.json")
+            json_dir = "src/data/cv_json"
+            os.makedirs(json_dir, exist_ok=True)
+            json_path = os.path.join(json_dir, f"{cv_id}.json")
 
             with open(json_path, "w", encoding="utf-8") as json_file:
                 json.dump(content, json_file, ensure_ascii=False, indent=4)
@@ -208,7 +208,7 @@ class CVProcessor:
         """
         Move rejected CVs to `cv_rejected/` folder.
         """
-        rejected_folder = "cv_rejected"
+        rejected_folder = "src/data/cv_rejected"
         os.makedirs(rejected_folder, exist_ok=True)
 
         try:
