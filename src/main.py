@@ -4,28 +4,31 @@ from flask import Flask, request, render_template, jsonify, send_file, make_resp
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
-from retriever.helper_retriever import HelperRetriever, load_existing_vector_store
+from retriever.helper_retriever import HelperRetriever, VectorStoreManager
 from utils.db import get_connection
+import config
 
-# Load env variables
 load_dotenv()
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = "tmp_uploads"
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# Init vector store & retriever
-vectorstore = load_existing_vector_store()
+# Load vector store using the shared VectorStoreManager.
+vectorstore = VectorStoreManager.load_existing_vector_store()
+if not vectorstore:
+    raise Exception("Vector store could not be loaded.")
 retriever = HelperRetriever(vectorstore, threshold=0.65)
+
 
 @app.route("/", methods=["GET"])
 def index():
     return render_template("index.html")
 
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
     job_description = ""
-
     # Textarea input
     if request.form.get("job_text"):
         job_description = request.form["job_text"]
@@ -47,7 +50,7 @@ def analyze():
 
     response_data = []
     for r in filtered:
-        # Get UUID from Chroma doc ID (remove path + .json)
+        # Remove path and file extension from the Chroma document ID.
         uuid_name = os.path.splitext(os.path.basename(r["id"]))[0]
         response_data.append({
             "uuid": uuid_name,
@@ -57,22 +60,19 @@ def analyze():
 
     return jsonify(response_data)
 
+
 @app.route("/attachment/<uuid>")
 def get_attachment(uuid):
     try:
         conn = get_connection()
         cur = conn.cursor()
-
-        # Try both ID and filename match
         cur.execute("""
             SELECT filename, pdf FROM cv_attachment
             WHERE id::text = %s OR filename = %s OR filename = %s
         """, (uuid, uuid, f"{uuid}.json"))
-
         result = cur.fetchone()
         cur.close()
         conn.close()
-
         if result:
             filename, pdf_bytes = result
             return send_file(
@@ -83,9 +83,9 @@ def get_attachment(uuid):
             )
         else:
             return make_response("❌ No PDF found for this CV.", 404)
-
     except Exception as e:
         return make_response(f"❌ Error retrieving CV PDF: {e}", 500)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
