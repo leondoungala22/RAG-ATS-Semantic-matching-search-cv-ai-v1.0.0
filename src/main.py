@@ -1,27 +1,24 @@
-from flask import Flask, request, render_template, jsonify
+import os
+import io
+from flask import Flask, request, render_template, jsonify, send_file, make_response
 from werkzeug.utils import secure_filename
-import os
-import tempfile
+from dotenv import load_dotenv
 
-import sys
-import os
-
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-if project_root not in sys.path:
-    sys.path.append(project_root)
-
-
-from src.utils.logger import get_logger
 from retriever.helper_retriever import HelperRetriever, load_existing_vector_store
+from utils.db import get_connection
+
+# Load env variables
+load_dotenv()
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
+app.config['UPLOAD_FOLDER'] = "tmp_uploads"
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# Load vectorstore once at app start
+# Init vector store & retriever
 vectorstore = load_existing_vector_store()
 retriever = HelperRetriever(vectorstore, threshold=0.65)
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def index():
     return render_template("index.html")
 
@@ -29,11 +26,11 @@ def index():
 def analyze():
     job_description = ""
 
-    # Option 1: Text area input
+    # Textarea input
     if request.form.get("job_text"):
         job_description = request.form["job_text"]
 
-    # Option 2: File upload
+    # File upload
     file = request.files.get("job_file")
     if file and file.filename.endswith(".txt"):
         filename = secure_filename(file.filename)
@@ -45,27 +42,50 @@ def analyze():
     if not job_description:
         return jsonify({"error": "No job description provided."}), 400
 
-    # Run retrieval
     results = retriever.perform_search(job_description)
     filtered = retriever.rerank_with_openai(job_description, results)
 
-    # Structure data for frontend
-    data = [{
-        "id": r["id"],
-        "score": round(r["score"], 4),
-        "reason": r["reason"]
-    } for r in filtered]
+    response_data = []
+    for r in filtered:
+        # Get UUID from Chroma doc ID (remove path + .json)
+        uuid_name = os.path.splitext(os.path.basename(r["id"]))[0]
+        response_data.append({
+            "uuid": uuid_name,
+            "score": round(r["score"], 4),
+            "reason": r.get("reason", "N/A")
+        })
 
-    return jsonify(data)
+    return jsonify(response_data)
 
-@app.route("/cv/<path:cv_id>")
-def view_cv(cv_id):
-    # Returns full original CV content as plain text (or JSON)
+@app.route("/attachment/<uuid>")
+def get_attachment(uuid):
     try:
-        content = retriever.query_by_id(cv_id)
-        return content or "CV not found."
+        conn = get_connection()
+        cur = conn.cursor()
+
+        # Try both ID and filename match
+        cur.execute("""
+            SELECT filename, pdf FROM cv_attachment
+            WHERE id::text = %s OR filename = %s OR filename = %s
+        """, (uuid, uuid, f"{uuid}.json"))
+
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if result:
+            filename, pdf_bytes = result
+            return send_file(
+                io.BytesIO(pdf_bytes),
+                mimetype="application/pdf",
+                download_name=filename,
+                as_attachment=False
+            )
+        else:
+            return make_response("❌ No PDF found for this CV.", 404)
+
     except Exception as e:
-        return f"Error loading CV: {e}", 500
+        return make_response(f"❌ Error retrieving CV PDF: {e}", 500)
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,36 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>ATS Semantic CV Matcher</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <!-- AI HR Favicon from icon library -->
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" type="image/png">
-
+  <meta charset="UTF-8" />
+  <title>AI CV Matcher</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" type="image/png">
 </head>
 <body>
-    <div class="container">
-        <h1>📄 Semantic CV Matcher</h1>
-        <p>Upload a job description or paste it below to find the most relevant CVs.</p>
+  <div class="container">
+    <h1>🤖 AI-Powered CV Matcher</h1>
 
-        <form id="job-form" method="POST" enctype="multipart/form-data">
-            <label for="job_text">Paste Job Description:</label><br>
-            <textarea name="job_text" id="job_text" rows="10" cols="80" placeholder="Paste job description here..."></textarea><br><br>
+    <form id="upload-form">
+      <textarea name="job_text" placeholder="Paste job description here..." rows="8"></textarea>
+      <p class="or">OR</p>
+      <input type="file" name="job_file" accept=".txt" />
+      <button type="submit">🔍 Match CVs</button>
+    </form>
 
-            <label for="job_file">Or Upload a Job Description (.txt):</label>
-            <input type="file" name="job_file" id="job_file" accept=".txt"><br><br>
-
-            <button type="submit">🔍 Analyze</button>
-        </form>
-
-        <div id="results">
-            <h2>📋 Matching CVs</h2>
-            <ul id="cv-list">
-                <!-- Results will be dynamically inserted here -->
-            </ul>
-        </div>
+    <div id="results-section" style="display: none;">
+      <h2>Top Ranked CVs</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Score</th>
+            <th>Reason</th>
+            <th>CV PDF</th>
+          </tr>
+        </thead>
+        <tbody id="results-table"></tbody>
+      </table>
     </div>
+  </div>
 
-    <script src="/static/script.js"></script>
+  <!-- Modal PDF viewer -->
+  <div id="cv-viewer" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeViewer()">×</span>
+      <iframe id="cv-iframe" src="" frameborder="0"></iframe>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 </body>
 </html>
