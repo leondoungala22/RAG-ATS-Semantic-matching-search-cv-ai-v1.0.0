@@ -1,20 +1,41 @@
-# **RAG-ATS Semantic Matching Search CV AI v1.0.0**  
-> **An AI-powered Applicant Tracking System (ATS)** leveraging **Retrieval-Augmented Generation (RAG)** and semantic search to streamline CV analysis and improve talent acquisition workflows.
+# TalentMatch ATS – AI-Powered Applicant Tracking System
+
+## Overview
+TalentMatch ATS is a sophisticated recruitment tool that uses artificial intelligence to revolutionize the hiring process. By analyzing resumes against job descriptions, it identifies the most qualified candidates with unprecedented accuracy. The system employs semantic search capabilities and RAG (Retrieval-Augmented Generation) technology to understand the context and requirements of positions better than traditional keyword-based systems.
+
+> **Note:** This is a demo version provided free of charge, created to illustrate my skills and capabilities in AI application development. It is not intended for commercial use.
+
+![TalentMatch Interface](Document/imag1.png)
+![Candidate Matching Process](Document/img2.png)
+
+**TalentMatch ATS** is an AI-driven applicant tracking system (ATS) that leverages semantic search and Retrieval-Augmented Generation (RAG) to match CVs with job descriptions. It automates CV parsing, semantic similarity, and relevance scoring to streamline candidate selection.
 
 ---
 
-## **Key Features**
+## Features
 
-- **🔍 Semantic Matching:** AI-powered search to match job descriptions with CVs intelligently.
-- ** CV Parsing:** Automatically extracts and structures data from CVs for analysis.
-- ** Candidate Ranking:** Ranks CVs by relevance to job descriptions using advanced embeddings.
-- ** Database Integration:** Stores CVs and structured data in **Azure Cosmos DB** and attachments in **MySQL**.
-- ** Web Interface:** A user-friendly web application to upload, search, and view CVs dynamically.
+- Semantic CV matching using vector search
+- Automatic CV parsing and structuring (PDF → JSON)
+- Relevance-based candidate ranking via OpenAI LLMs
+- Original CV PDF storage and viewing
+- Web interface for uploading JDs and analyzing results
 
 ---
 
-## 📂 **Project Structure**
+## Tech Stack
 
+- **Backend**: Python (Flask)
+- **Frontend**: HTML, CSS, JavaScript, Bootstrap
+- **AI**: OpenAI GPT-4o, text-embedding-ada-002, LangChain
+- **OCR & Parsing**: PyMuPDF, pdfplumber, EasyOCR
+- **Search Engine**: Chroma (Vector DB)
+- **Database**: PostgreSQL (CV metadata + PDF storage)
+
+---
+
+## Project Structure
+
+```
 ```plaintext
 RAG-ATS-Semantic-Matching-Search-CV-AI/
 ├── src/
@@ -40,119 +61,73 @@ RAG-ATS-Semantic-Matching-Search-CV-AI/
 
 ---
 
-## 🚀 **Getting Started**
+## Setup Instructions
 
-### **Prerequisites**
-- **Python**: Version 3.8 or higher.
-- **Databases**:
-  - **Azure Cosmos DB** for storing structured CVs.
-  - **MySQL** for managing CV attachments.
-- **APIs**:
-  - **Anthropic Claude API** for generating structured CVs.
-  - **Azure OpenAI API** for embeddings and semantic similarity.
+### Prerequisites
 
-### **Installation**
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/LeonDoungala22/RAG-ATS-Semantic-Matching-Search-CV-AI-v1.0.0.git
-   cd RAG-ATS-Semantic-Matching-Search-CV-AI-v1.0.0
-   ```
+- Python 3.8+
+- PostgreSQL running locally
 
-2. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### Installation
 
-3. **Set Up Environment Variables**:
-   Create a `.env` file in the root directory and add:
-   ```dotenv
-   COSMOS_ENDPOINT=<your_cosmos_db_endpoint>
-   COSMOS_KEY=<your_cosmos_db_key>
-   MYSQL_USER_LOCAL=<your_mysql_user>
-   MYSQL_PASSWORD_LOCAL=<your_mysql_password>
-   MYSQL_HOST_LOCAL=<your_mysql_host>
-   OPENAI_API_KEY=<your_openai_key>
-   ANTHROPIC_API_KEY=<your_anthropic_key>
-   ```
+```bash
+git clone https://github.com/LeonDoungala22/RAG-ATS-Semantic-Matching-Search-CV-AI-v1.0.0.git
+cd RAG-ATS-Semantic-Matching-Search-CV-AI-v1.0.0
+pip install -r requirements.txt
+```
+
+### Configure `.env`
+
+Create a `.env` file in the root directory:
+
+```
+OPENAI_API_KEY=
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+POSTGRES_HOST=
+POSTGRES_PORT=
+POSTGRES_DB=
+```
 
 ---
 
-## 🎯 **Usage**
+## Usage
 
-### **Running the Application**
-1. **Start the Flask App**:
-   ```bash
-   python src/main.py
-   ```
-2. **Access the Web Interface**:
-   Open your browser and navigate to `http://localhost:5000`.
+### 1. Ingest CVs
 
-### **Features**
-- **Upload CVs**: Drag and drop your CVs in `.pdf` format.
-- **Provide Job Descriptions**: Input detailed job descriptions.
-- **View Results**: Get ranked CVs with structured data.
+Place your PDFs in:
 
----
+```
+src/data/cv/
+```
 
-## 📊 **How It Works**
+Then run:
 
-1. **Data Ingestion**:
-   - Upload CVs in `.pdf` or `.docx` format.
-   - Job descriptions are analyzed alongside CVs.
-   
-2. **CV Structuring**:
-   - Text is extracted from CVs using **Anthropic Claude API**.
-   - Key data (e.g., skills, experience, GitHub projects) is structured.
+```bash
+python src/augmenter/cv_processor.py
+```
 
-3. **Semantic Search**:
-   - Uses **Azure OpenAI embeddings** for similarity scoring.
-   - Performs a **vector-based search** in **Azure Cosmos DB**.
-   - Results are re-ranked using dynamic thresholds and **Anthropic AI**.
+### 2. Launch Web App
 
-4. **Presentation**:
-   - Results are displayed with similarity scores and dynamic CV formatting.
-   - Original CV attachments are accessible via **MySQL**.
+```bash
+python src/main.py
+```
+
+Then open [http://localhost:5000](http://localhost:5000) to use the interface.
 
 ---
 
-## 🛠 **Technical Overview**
+## License
 
-- **Framework**: Flask (Python)
-- **Database**: Azure Cosmos DB (NoSQL), MySQL (relational)
-- **AI Models**:
-  - **Azure OpenAI Embeddings**: `text-embedding-ada-002`
-  - **Anthropic Claude**: For CV structuring and re-ranking.
-- **Deployment**:
-  - Scalable architecture with support for cloud-based APIs and databases.
+This project is licensed under the MIT License.
+See the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 👨‍💻 **Contributing**
-
-Contributions are welcome! Follow these steps:
-1. Fork the repository.
-2. Create a feature branch:
-   ```bash
-   git checkout -b feature/new-feature
-   ```
-3. Commit your changes and push:
-   ```bash
-   git push origin feature/new-feature
-   ```
-4. Create a pull request.
-
----
-
-## 📄 **License**
-
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
-
----
-
-## 📧 **Contact**
+## Contact
 
 For questions or support, feel free to reach out:
-- **GitHub**: [LeonDoungala22](https://github.com/LeonDoungala22)
-- **Portfolio Website**: [leondoungala22.github.io](https://leondoungala22.github.io/doungala.leon.github.io/)
-- **Email**: [doungala.leon@gmail.com](mailto:doungala.leon@gmail.com)
 
+- **GitHub**: [LeonDoungala22](https://github.com/LeonDoungala22)
+- **Portfolio**: [leondoungala22.github.io](https://leondoungala22.github.io)
+- **Email**: doungala.leon@gmail.com

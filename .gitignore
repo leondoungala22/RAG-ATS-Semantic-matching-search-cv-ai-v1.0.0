@@ -22,7 +22,7 @@ build/
 develop-eggs/
 dist/
 downloads/
-Document/
+
 eggs/
 .eggs/
 lib/

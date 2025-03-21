@@ -134,7 +134,7 @@ const displayResults = (data) => {
       </td>
       <td>${result.reason}</td>
       <td>
-        <button class="btn btn-orange" onclick="viewCV('${result.uuid}')">
+        <button class="btn btn-orange btn-sm" onclick="viewCV('${result.uuid}')">
           <i class="fas fa-eye"></i> View
         </button>
       </td>
@@ -145,8 +145,8 @@ const displayResults = (data) => {
   // Initialize DataTable with responsive options
   applicantsTable = $('#applicants-table').DataTable({
     responsive: true,
-    pageLength: 5,
-    lengthMenu: [5, 10, 25, 50],
+    pageLength: 10, // Show more results per page
+    lengthMenu: [10, 25, 50, 100],
     scrollX: false,
     autoWidth: false,
     language: {

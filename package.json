@@ -1,0 +1,20 @@
+{
+  "name": "rag-ats-semantic-matching-search-cv-ai-v1.0.0-1",
+  "version": "1.0.0",
+  "description": "> **An AI-powered Applicant Tracking System (ATS)** leveraging **Retrieval-Augmented Generation (RAG)** and semantic search to streamline CV analysis and improve talent acquisition workflows.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LeonDoungala22/RAG-ATS-Semantic-matching-search-cv-ai-v1.0.0.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LeonDoungala22/RAG-ATS-Semantic-matching-search-cv-ai-v1.0.0/issues"
+  },
+  "homepage": "https://github.com/LeonDoungala22/RAG-ATS-Semantic-matching-search-cv-ai-v1.0.0#readme"
+}
