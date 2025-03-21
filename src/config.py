@@ -5,7 +5,7 @@ load_dotenv()
 
 # Path to Chroma database and job description file
 CHROMA_DB_PATH = os.path.join("src", "data", "chromadb")
-JOB_DESCRIPTION_PATH = os.path.join("src", "data", "job description", "Job_Description_Italian.txt") # user for test 
+JOB_DESCRIPTION_PATH = os.path.join("src", "data", "job description", "Job_Description_Italian.txt") # used to test 
 
 # OpenAI settings
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY_MAIN")

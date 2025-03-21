@@ -2,42 +2,79 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI CV Matcher</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" type="image/png">
 </head>
 <body>
-  <div class="container">
-    <h1>🤖 AI-Powered CV Matcher</h1>
+  <header>
+    <div class="header-container">
+      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Logo" class="logo" />
+      <h1>AI-Powered CV Matcher</h1>
+    </div>
+  </header>
 
-    <form id="upload-form">
-      <textarea name="job_text" placeholder="Paste job description here..." rows="8"></textarea>
-      <p class="or">OR</p>
-      <input type="file" name="job_file" accept=".txt" />
-      <button type="submit">🔍 Match CVs</button>
-    </form>
+  <main>
+    <section class="upload-section">
+      <form id="upload-form" class="form">
+        <textarea name="job_text" placeholder="Paste job description here..." rows="8"></textarea>
+        <div class="or-divider">OR</div>
+        <div class="file-upload" id="file-upload-container">
+          <input type="file" name="job_file" id="job-file" accept=".txt" />
+          <label for="job-file" class="file-upload-label">
+            <i class="fas fa-cloud-upload-alt file-icon"></i>
+            <span id="file-name">Choose a file</span>
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary">Match CVs</button>
+      </form>
+    </section>
 
-    <div id="results-section" style="display: none;">
-      <h2>Top Ranked CVs</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>File</th>
-            <th>Score</th>
-            <th>Reason</th>
-            <th>CV PDF</th>
-          </tr>
-        </thead>
-        <tbody id="results-table"></tbody>
-      </table>
+    <section id="results-section" class="results-section" style="display: none;">
+      <h2>Top Ranked CVs <span id="result-count" class="result-count"></span></h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Score</th>
+              <th>Reason</th>
+              <th>CV PDF</th>
+            </tr>
+          </thead>
+          <tbody id="results-table"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal PDF Viewer -->
+  <div id="cv-viewer" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Resume</h3>
+        <div class="modal-actions">
+          <button id="download-pdf" class="btn btn-secondary">Download PDF</button>
+          <button class="close-btn" onclick="closeViewer()">×</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <iframe id="cv-iframe" src="" frameborder="0"></iframe>
+      </div>
     </div>
   </div>
 
-  <!-- Modal PDF viewer -->
-  <div id="cv-viewer" class="modal">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeViewer()">×</span>
-      <iframe id="cv-iframe" src="" frameborder="0"></iframe>
+  <!-- Toast Notifications & Loader -->
+  <div id="toast-container" class="toast-container"></div>
+  <div id="loader" class="loader-overlay">
+    <div class="loader-content">
+      <div class="spinner-3d">
+        <div class="cube1"></div>
+        <div class="cube2"></div>
+      </div>
+      <div class="loading-text">Processing...</div>
+      <div class="loading-subtext">Please wait while we match CVs</div>
     </div>
   </div>
 
