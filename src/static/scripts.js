@@ -18,13 +18,20 @@ const initFileUpload = () => {
       resetFileUpload();
     }
   });
+
+  // Make the entire container clickable
+  fileUploadContainer.addEventListener('click', (e) => {
+    if (e.target !== fileInput) {
+      fileInput.click();
+    }
+  });
 };
 
 const resetFileUpload = () => {
   const fileNameLabel = document.getElementById('file-name');
   const fileUploadContainer = document.getElementById('file-upload-container');
-  fileNameLabel.style.display = 'none';
-  fileNameLabel.textContent = 'Choose a file';
+  fileNameLabel.style.display = 'inline';
+  fileNameLabel.textContent = 'Upload job description file';
   fileUploadContainer.classList.remove('file-selected');
 };
 
@@ -55,7 +62,17 @@ const initFormSubmission = () => {
           loader.classList.remove('visible');
           displayResults(data);
           document.getElementById('results-section').style.display = 'block';
-          showToast(data.length ? `Found ${data.length} matching candidates!` : 'No matching candidates found', data.length ? 'success' : 'warning');
+          
+          // Add classes to adjust layout when results are shown
+          document.getElementById('upload-section').classList.add('with-results');
+          document.getElementById('results-section').classList.add('with-results');
+          
+          showToast(
+            data.length 
+              ? `Found ${data.length} matching candidates!` 
+              : 'No matching candidates found', 
+            data.length ? 'success' : 'warning'
+          );
         }, 800);
       })
       .catch(error => {
@@ -68,7 +85,14 @@ const initFormSubmission = () => {
 
 const displayResults = (data) => {
   const resultsTable = document.getElementById('results-table');
+  const resultCount = document.getElementById('result-count');
   resultsTable.innerHTML = '';
+  
+  if (data.length) {
+    resultCount.textContent = `(${data.length})`;
+  } else {
+    resultCount.textContent = '';
+  }
 
   if (!data.length) {
     resultsTable.innerHTML = `
@@ -84,15 +108,18 @@ const displayResults = (data) => {
   }
 
   data.sort((a, b) => b.score - a.score);
-  data.forEach((result) => {
+  data.forEach((result, index) => {
     const tr = document.createElement('tr');
-    const scoreColor = result.score > 0.85 ? 'var(--success)' : (result.score < 0.7 ? 'var(--warning)' : 'var(--primary)');
+    const scoreColor = result.score > 0.85 
+      ? 'var(--success)' 
+      : (result.score < 0.7 ? 'var(--warning)' : 'var(--primary)');
     const scorePercentage = Math.round(result.score * 100);
+    
     tr.innerHTML = `
       <td>
         <div class="file-info">
-          <i class="fas fa-file-pdf"></i>
-          <span>${result.uuid}</span>
+          <i class="fas fa-user-tie"></i>
+          <span>Candidate ${index + 1} <small>(${result.uuid})</small></span>
         </div>
       </td>
       <td>
@@ -113,6 +140,7 @@ const showToast = (message, type = 'info') => {
   const toastContainer = document.getElementById('toast-container');
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
+  
   let icon = 'fa-info-circle';
   if (type === 'success') icon = 'fa-check-circle';
   if (type === 'warning') icon = 'fa-exclamation-triangle';
@@ -120,6 +148,7 @@ const showToast = (message, type = 'info') => {
 
   toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
   toastContainer.appendChild(toast);
+  
   setTimeout(() => {
     toast.classList.add('fade-out');
     setTimeout(() => toast.remove(), 300);
@@ -130,9 +159,20 @@ const viewCV = (uuid) => {
   const viewer = document.getElementById('cv-viewer');
   const iframe = document.getElementById('cv-iframe');
   const modalTitle = document.getElementById('modal-title');
+  
   modalTitle.textContent = 'Loading Resume...';
   iframe.src = `/attachment/${uuid}`;
   viewer.classList.add('show');
+  
+  // Update title once loaded
+  iframe.onload = () => {
+    modalTitle.textContent = `Candidate Resume (${uuid})`;
+  };
+  
+  // Set up download button
+  document.getElementById('download-pdf').onclick = () => {
+    window.open(`/attachment/${uuid}?download=true`, '_blank');
+  };
 };
 
 const closeViewer = () => {

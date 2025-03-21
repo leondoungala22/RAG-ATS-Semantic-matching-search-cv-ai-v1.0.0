@@ -1,3 +1,4 @@
+.0-1/src/templates/index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +7,7 @@
   <title>AI CV Matcher</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" type="image/png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
   <header>
@@ -16,37 +18,42 @@
   </header>
 
   <main>
-    <section class="upload-section">
-      <form id="upload-form" class="form">
-        <textarea name="job_text" placeholder="Paste job description here..." rows="8"></textarea>
-        <div class="or-divider">OR</div>
-        <div class="file-upload" id="file-upload-container">
-          <input type="file" name="job_file" id="job-file" accept=".txt" />
-          <label for="job-file" class="file-upload-label">
-            <i class="fas fa-cloud-upload-alt file-icon"></i>
-            <span id="file-name">Choose a file</span>
-          </label>
-        </div>
-        <button type="submit" class="btn btn-primary">Match CVs</button>
-      </form>
-    </section>
+    <div class="content-container">
+      <section class="upload-section" id="upload-section">
+        <h2><i class="fas fa-search"></i> Find the Perfect Candidate</h2>
+        <form id="upload-form" class="form">
+          <textarea name="job_text" placeholder="Paste job description here..." rows="8"></textarea>
+          <div class="or-divider">OR</div>
+          <div class="file-upload" id="file-upload-container">
+            <input type="file" name="job_file" id="job-file" accept=".txt" hidden />
+            <label for="job-file" class="file-upload-label">
+              <i class="fas fa-cloud-upload-alt file-icon"></i>
+              <span id="file-name">Upload job description file</span>
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-bolt"></i> Match CVs
+          </button>
+        </form>
+      </section>
 
-    <section id="results-section" class="results-section" style="display: none;">
-      <h2>Top Ranked CVs <span id="result-count" class="result-count"></span></h2>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>File</th>
-              <th>Score</th>
-              <th>Reason</th>
-              <th>CV PDF</th>
-            </tr>
-          </thead>
-          <tbody id="results-table"></tbody>
-        </table>
-      </div>
-    </section>
+      <section id="results-section" class="results-section" style="display: none;">
+        <h2><i class="fas fa-trophy"></i> Top Ranked Candidates <span id="result-count" class="result-count"></span></h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Match Score</th>
+                <th>Matching Reasons</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="results-table"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   </main>
 
   <!-- Modal PDF Viewer -->
@@ -55,7 +62,9 @@
       <div class="modal-header">
         <h3 id="modal-title">Resume</h3>
         <div class="modal-actions">
-          <button id="download-pdf" class="btn btn-secondary">Download PDF</button>
+          <button id="download-pdf" class="btn btn-secondary">
+            <i class="fas fa-download"></i> Download
+          </button>
           <button class="close-btn" onclick="closeViewer()">×</button>
         </div>
       </div>
@@ -73,8 +82,8 @@
         <div class="cube1"></div>
         <div class="cube2"></div>
       </div>
-      <div class="loading-text">Processing...</div>
-      <div class="loading-subtext">Please wait while we match CVs</div>
+      <div class="loading-text">Finding Top Candidates</div>
+      <div class="loading-subtext">Analyzing resumes with AI matching technology</div>
     </div>
   </div>
 
