@@ -1,3 +1,5 @@
+let applicantsTable;
+
 document.addEventListener('DOMContentLoaded', () => {
   initFileUpload();
   initFormSubmission();
@@ -31,7 +33,7 @@ const resetFileUpload = () => {
   const fileNameLabel = document.getElementById('file-name');
   const fileUploadContainer = document.getElementById('file-upload-container');
   fileNameLabel.style.display = 'inline';
-  fileNameLabel.textContent = 'Upload job description file';
+  fileNameLabel.textContent = 'Upload job description document';
   fileUploadContainer.classList.remove('file-selected');
 };
 
@@ -46,7 +48,7 @@ const initFormSubmission = () => {
     const jobFile = formData.get('job_file');
 
     if (!jobText && (!jobFile || jobFile.size === 0)) {
-      showToast('Please enter a job description or upload a file', 'error');
+      showToast('Please enter job requirements or upload a document', 'error');
       return;
     }
 
@@ -69,15 +71,15 @@ const initFormSubmission = () => {
           
           showToast(
             data.length 
-              ? `Found ${data.length} matching candidates!` 
-              : 'No matching candidates found', 
+              ? `Found ${data.length} qualified applicants!` 
+              : 'No qualified applicants found', 
             data.length ? 'success' : 'warning'
           );
         }, 800);
       })
       .catch(error => {
         loader.classList.remove('visible');
-        showToast('Error analyzing job description: ' + error.message, 'error');
+        showToast('Error analyzing job requirements: ' + error.message, 'error');
         console.error(error);
       });
   });
@@ -94,13 +96,18 @@ const displayResults = (data) => {
     resultCount.textContent = '';
   }
 
+  // Destroy existing DataTable if it exists
+  if (applicantsTable) {
+    applicantsTable.destroy();
+  }
+
   if (!data.length) {
     resultsTable.innerHTML = `
       <tr>
         <td colspan="4" class="no-results">
           <i class="fas fa-search"></i>
-          <h3>No matching candidates found</h3>
-          <p>Try adjusting your job description or using different keywords.</p>
+          <h3>No qualified applicants found</h3>
+          <p>Try adjusting your job requirements or expanding search criteria.</p>
         </td>
       </tr>
     `;
@@ -112,14 +119,14 @@ const displayResults = (data) => {
     const tr = document.createElement('tr');
     const scoreColor = result.score > 0.85 
       ? 'var(--success)' 
-      : (result.score < 0.7 ? 'var(--warning)' : 'var(--primary)');
+      : (result.score < 0.7 ? 'var(--warning)' : 'var(--orange)');
     const scorePercentage = Math.round(result.score * 100);
     
     tr.innerHTML = `
       <td>
         <div class="file-info">
           <i class="fas fa-user-tie"></i>
-          <span>Candidate ${index + 1} <small>(${result.uuid})</small></span>
+          <span>Applicant ${index + 1}</span>
         </div>
       </td>
       <td>
@@ -127,12 +134,38 @@ const displayResults = (data) => {
       </td>
       <td>${result.reason}</td>
       <td>
-        <button class="btn btn-secondary" onclick="viewCV('${result.uuid}')">
+        <button class="btn btn-orange" onclick="viewCV('${result.uuid}')">
           <i class="fas fa-eye"></i> View
         </button>
       </td>
     `;
     resultsTable.appendChild(tr);
+  });
+  
+  // Initialize DataTable with responsive options
+  applicantsTable = $('#applicants-table').DataTable({
+    responsive: true,
+    pageLength: 5,
+    lengthMenu: [5, 10, 25, 50],
+    scrollX: false,
+    autoWidth: false,
+    language: {
+      search: "Find applicant:",
+      lengthMenu: "Show _MENU_ applicants",
+      info: "Showing _START_ to _END_ of _TOTAL_ applicants",
+      paginate: {
+        first: '<i class="fas fa-angle-double-left"></i>',
+        last: '<i class="fas fa-angle-double-right"></i>',
+        next: '<i class="fas fa-angle-right"></i>',
+        previous: '<i class="fas fa-angle-left"></i>'
+      }
+    },
+    columnDefs: [
+      { width: "15%", targets: 0 },
+      { width: "15%", targets: 1, className: 'text-center' },
+      { width: "55%", targets: 2 },
+      { width: "15%", targets: 3, className: 'text-center' }
+    ]
   });
 };
 
@@ -166,7 +199,7 @@ const viewCV = (uuid) => {
   
   // Update title once loaded
   iframe.onload = () => {
-    modalTitle.textContent = `Candidate Resume (${uuid})`;
+    modalTitle.textContent = 'Applicant Resume';
   };
   
   // Set up download button

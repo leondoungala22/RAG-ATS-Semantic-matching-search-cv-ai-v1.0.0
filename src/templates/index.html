@@ -1,52 +1,71 @@
-.0-1/src/templates/index.html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI CV Matcher</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
-  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" type="image/png">
+  <title>TalentMatch ATS | AI-Powered Recruitment System</title>
+  
+  <!-- External CSS Libraries -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  
+  <!-- Favicon from web -->
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" type="image/png">
 </head>
 <body>
   <header>
     <div class="header-container">
       <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Logo" class="logo" />
-      <h1>AI-Powered CV Matcher</h1>
+      <div class="app-title">
+        <h1 class="app-name">TalentMatch ATS</h1>
+        <div class="app-tagline">AI-Powered Applicant Tracking System</div>
+      </div>
     </div>
   </header>
 
   <main>
     <div class="content-container">
       <section class="upload-section" id="upload-section">
-        <h2><i class="fas fa-search"></i> Find the Perfect Candidate</h2>
+        <div class="section-header">
+          <i class="fas fa-briefcase"></i>
+          <h2>Position Requirements</h2>
+        </div>
         <form id="upload-form" class="form">
-          <textarea name="job_text" placeholder="Paste job description here..." rows="8"></textarea>
+          <textarea name="job_text" placeholder="Paste job description or requirements here..." rows="8"></textarea>
           <div class="or-divider">OR</div>
           <div class="file-upload" id="file-upload-container">
-            <input type="file" name="job_file" id="job-file" accept=".txt" hidden />
+            <input type="file" name="job_file" id="job-file" accept=".txt,.pdf,.docx" hidden />
             <label for="job-file" class="file-upload-label">
               <i class="fas fa-cloud-upload-alt file-icon"></i>
-              <span id="file-name">Upload job description file</span>
+              <span id="file-name">Upload job description document</span>
             </label>
           </div>
           <button type="submit" class="btn btn-primary">
-            <i class="fas fa-bolt"></i> Match CVs
+            <i class="fas fa-bolt"></i> Screen Applicants
           </button>
         </form>
       </section>
 
       <section id="results-section" class="results-section" style="display: none;">
-        <h2><i class="fas fa-trophy"></i> Top Ranked Candidates <span id="result-count" class="result-count"></span></h2>
+        <div class="section-header">
+          <i class="fas fa-trophy"></i>
+          <h2>Top Qualified Applicants <span id="result-count" class="result-count"></span></h2>
+        </div>
+        
         <div class="table-container">
-          <table>
+          <table id="applicants-table" class="table table-striped table-hover">
             <thead>
               <tr>
-                <th>Candidate</th>
-                <th>Match Score</th>
-                <th>Matching Reasons</th>
-                <th>Actions</th>
+                <th><i class="fas fa-user-tie"></i> Applicant</th>
+                <th><i class="fas fa-percentage"></i> Match</th>
+                <th><i class="fas fa-check-circle"></i> Key Qualifications</th>
+                <th><i class="fas fa-cogs"></i> Actions</th>
               </tr>
             </thead>
             <tbody id="results-table"></tbody>
@@ -56,11 +75,11 @@
     </div>
   </main>
 
-  <!-- Modal PDF Viewer -->
+  <!-- Modal Resume Viewer -->
   <div id="cv-viewer" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="modal-title">Resume</h3>
+        <h3 id="modal-title">Applicant Resume</h3>
         <div class="modal-actions">
           <button id="download-pdf" class="btn btn-secondary">
             <i class="fas fa-download"></i> Download
@@ -82,11 +101,27 @@
         <div class="cube1"></div>
         <div class="cube2"></div>
       </div>
-      <div class="loading-text">Finding Top Candidates</div>
-      <div class="loading-subtext">Analyzing resumes with AI matching technology</div>
+      <div class="loading-text">Screening Applicants</div>
+      <div class="loading-subtext">AI is analyzing qualifications against job requirements</div>
     </div>
   </div>
+  
+  <footer class="app-footer">
+    <div class="footer-features">
+      <span><i class="fas fa-brain"></i> AI-Powered Matching</span>
+      <span><i class="fas fa-search"></i> Semantic Search</span>
+      <span><i class="fas fa-robot"></i> Automated Screening</span>
+    </div>
+    <p>TalentMatch ATS v1.0.0 • Powered by Leon Doungala • © 2025</p>
+  </footer>
 
+  <!-- External JavaScript Libraries -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+  
+  <!-- Custom JavaScript -->
   <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 </body>
 </html>
