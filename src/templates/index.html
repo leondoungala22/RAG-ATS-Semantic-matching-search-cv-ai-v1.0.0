@@ -1,98 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional CV Retriever</title>
+    <title>ATS Semantic CV Matcher</title>
     <link rel="stylesheet" href="/static/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-</head>
+    <!-- AI HR Favicon from icon library -->
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" type="image/png">
 
+</head>
 <body>
     <div class="container">
-        <!-- Header -->
-        <header>
-            <div class="header-title">
-                <h1>
-                    <i class="fas fa-briefcase"></i>SmartHire AI
-                </h1>
-            </div>
-            <button id="newSearchButton" onclick="showSearchForm()">
-                <i class="fas fa-search"></i> New Search
-            </button>
-        </header>
+        <h1>📄 Semantic CV Matcher</h1>
+        <p>Upload a job description or paste it below to find the most relevant CVs.</p>
 
-        <!-- Search Section -->
-        <section id="search-container" class="box">
-            <h2>Search for Candidates</h2>
-            <form id="searchForm" action="/search" method="post">
-                <label for="job_description" class="visually-hidden">Job Description</label>
-                <textarea name="job_description" id="job_description" placeholder="Enter job description here..." required></textarea>
-                <button type="submit" class="primary-btn">
-                    <i class="fas fa-search"></i> Search
-                </button>
-            </form>
-            <div id="errorMessage" class="error-message" aria-live="polite"></div>
-        </section>
+        <form id="job-form" method="POST" enctype="multipart/form-data">
+            <label for="job_text">Paste Job Description:</label><br>
+            <textarea name="job_text" id="job_text" rows="10" cols="80" placeholder="Paste job description here..."></textarea><br><br>
 
-        <!-- Results Section -->
-        <section id="results-container" class="results-layout" data-has-results="{{ has_results | lower }}" data-results='{{ results | tojson | safe }}' style="display: none;">
-            <!-- Candidate Overview -->
-            <article id="candidate-overview" class="overview-container">
-                <h2>Candidate Overview</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th scope="col"><i class="fas fa-user"></i> Name</th>
-                            <th scope="col"><i class="fas fa-briefcase"></i> Professional Title</th>
-                            <th scope="col"><i class="fas fa-tasks"></i> Position of Interest</th>
-                            <th scope="col"><i class="fas fa-level-up-alt"></i> Seniority</th>
-                            <th scope="col"><i class="fas fa-chart-line"></i> Similarity Score</th>
-                            <th scope="col"><i class="fas fa-cogs"></i> Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for result in results %}
-                        <tr>
-                            <td>{{ result.formatted_cv['Informazioni_personali']['Nome_completo'] }}</td>
-                            <td>{{ result.formatted_cv['Informazioni_personali']['Titolo_professionale'] }}</td>
-                            <td>{{ result.formatted_cv['Informazioni_personali']['Posizione_interesse'] }}</td>
-                            <td>{{ result.formatted_cv['Informazioni_personali']['Seniority'] }}</td>
-                            <td class="similarity-score" data-score="{{ result.similarity_score | round(4) }}">
-                                {{ result.similarity_score | round(4) }}
-                            </td>
-                            <td class="actions">
-                                <button class="primary-btn" onclick="showDetailedCV('{{ result.document_id }}')">
-                                    <i class="fas fa-info-circle"></i> Details
-                                </button>
-                                <button class="secondary-btn" onclick="viewOriginalCV('{{ result.document_id }}')">
-                                    <i class="fas fa-file-pdf"></i> CV
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </article>
+            <label for="job_file">Or Upload a Job Description (.txt):</label>
+            <input type="file" name="job_file" id="job_file" accept=".txt"><br><br>
 
-            <!-- Detailed CV Section -->
-            <aside id="cvDetails" class="details-container">
-                <h2>Candidate CV</h2>
-                <div id="cvDetailsContent">
-                    <p>Select a candidate to view detailed information here.</p>
-                </div>
-            </aside>
-        </section>
+            <button type="submit">🔍 Analyze</button>
+        </form>
 
-        <!-- Footer -->
-        <footer>
-            <p> Use AI to Find the Best Candidates for Your Job Description &copy; 2024</p>
-        </footer>
+        <div id="results">
+            <h2>📋 Matching CVs</h2>
+            <ul id="cv-list">
+                <!-- Results will be dynamically inserted here -->
+            </ul>
+        </div>
     </div>
 
     <script src="/static/script.js"></script>
 </body>
-
 </html>

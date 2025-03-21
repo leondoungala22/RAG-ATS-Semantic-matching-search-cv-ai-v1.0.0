@@ -2,12 +2,13 @@ import os
 import sys
 import json
 from dotenv import load_dotenv
+
 from langchain_chroma import Chroma
 from langchain.schema import Document
 from langchain.retrievers import MultiQueryRetriever
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 
-# Project setup
+# Add project root
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
     sys.path.append(project_root)
@@ -28,7 +29,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY_MAIN")
 EMBEDDINGS_MODEL = os.getenv("OPENAI_EMBEDDINGS_MODEL_DEPLOYMENT", "text-embedding-ada-002")
 
 # ========================== #
-#  ✅ Vector DB Loader      #
+#  ✅ Load Chroma DB        #
 # ========================== #
 
 embeddings = OpenAIEmbeddings(
@@ -50,7 +51,7 @@ def load_existing_vector_store():
         return None
 
 # ========================== #
-#  ✅ HelperRetriever Class #
+#  ✅ Main Retriever Class  #
 # ========================== #
 
 class HelperRetriever:
@@ -61,7 +62,7 @@ class HelperRetriever:
 
         self.llm = ChatOpenAI(
             temperature=0,
-            model_name="gpt-4o",
+            model_name="gpt-4o-mini",
             openai_api_key=OPENAI_API_KEY
         )
 
@@ -74,7 +75,7 @@ class HelperRetriever:
             return None
         with open(path, "r", encoding="utf-8") as f:
             content = f.read().strip()
-        self.logger.info(f"📄 Loaded job description: {path}")
+        self.logger.info(f"📄 Loaded job description from: {path}")
         self.logger.debug(f"📝 Job Description:\n{content}")
         return content
 
@@ -88,8 +89,16 @@ class HelperRetriever:
                 return []
 
             results = []
+            self.logger.info(f"✅ Retrieved {len(documents)} documents before reranking.")
+
             for i, doc in enumerate(documents):
                 doc_id = doc.metadata.get("source", f"doc_{i}")
+                preview = doc.page_content.strip().replace("\n", " ")[:200]
+                self.logger.info(f"\n--- Document #{i + 1} ---")
+                self.logger.info(f"📄 ID: {doc_id}")
+                self.logger.info(f"📃 Preview: {preview}")
+                self.logger.info(f"🟢 Score: 1.0000 (pre-reranking)\n")
+
                 results.append({"id": doc_id, "doc": doc, "score": 1.0})
             return results
 
@@ -101,12 +110,14 @@ class HelperRetriever:
         try:
             self.logger.info("🤖 Re-ranking results using OpenAI LLM to simulate HR filtering...")
 
+            # Step 1: Reranking prompt
             prompt = (
-                f"You are an AI HR assistant. Rank the following CVs for this job:\n\n"
+                f"You are an AI HR assistant. Rank the following CVs based on this job description:\n\n"
                 f"Job Description:\n{query}\n\n"
-                f"Score each candidate from 0.0 to 1.0 based on match to job title, experience, skills.\n"
-                f"Only include CVs that are currently active and highly relevant.\n"
-                f"Return format: Document ID: [id], Score: [score]\n\n"
+                f"Score each from 0.0 to 1.0 based on match to role, skills, experience pay attention to not retrun candidates that are not interrested for the postion avoid also duplicating candidates .\n"
+                f"Exclude outdated, irrelevant, or unrelated profiles.\n\n"
+                f"Return only lines in this format:\n"
+                f"Document ID: <doc_id>, Score: <score>, Reason: <short_reason>\n\n"
             )
 
             for r in results:
@@ -115,31 +126,38 @@ class HelperRetriever:
             response = self.llm.invoke(prompt).content.strip()
             self.logger.debug(f"🔁 LLM Raw Response:\n{response}")
 
-            # Parse output
-            ids, scores = [], []
+            # Step 2: Parse the output
+            ids, scores, reasons = [], [], []
             for line in response.splitlines():
                 try:
-                    doc_id, score_str = line.split(": ")
-                    score = round(float(score_str.strip()), 4)
+                    if not line.lower().startswith("document id:"):
+                        continue
+                    parts = line.split(",")
+                    doc_id = parts[0].split(":", 1)[1].strip()
+                    score = float(parts[1].split(":", 1)[1].strip())
+                    reason = parts[2].split(":", 1)[1].strip() if len(parts) > 2 else "N/A"
                     if score >= self.threshold:
-                        ids.append(doc_id.strip())
+                        ids.append(doc_id)
                         scores.append(score)
-                except Exception:
-                    self.logger.warning(f"⚠️ Skipped line: {line}")
+                        reasons.append(reason)
+                except Exception as e:
+                    self.logger.warning(f"⚠️ Could not parse line: {line} | {e}")
 
+            # Step 3: Match back to original documents
             filtered = []
-            for r in results:
-                if r["id"] in ids:
-                    i = ids.index(r["id"])
-                    r["score"] = scores[i]
-                    filtered.append(r)
+            for i, doc_id in enumerate(ids):
+                match = next((r for r in results if r["id"] == doc_id), None)
+                if match:
+                    match["score"] = scores[i]
+                    match["reason"] = reasons[i]
+                    filtered.append(match)
 
             self.logger.info(f"✅ Re-ranked and selected {len(filtered)} candidates above threshold {self.threshold}.")
             return filtered
 
         except Exception as e:
             self.logger.error(f"❌ Error during reranking: {e}")
-            return results  # fallback: return all
+            return results  # fallback
 
     def format_content(self, content):
         try:
@@ -164,11 +182,13 @@ class HelperRetriever:
         for i, r in enumerate(results, start=1):
             doc_id = r["id"]
             score = r.get("score", 1.0)
+            reason = r.get("reason", "N/A")
             doc = r["doc"]
 
             self.logger.info(f"\n{'='*30} CV #{i} {'='*30}")
             self.logger.info(f"🆔 Document ID: {doc_id}")
             self.logger.info(f"📈 Score: {score:.4f}")
+            self.logger.info(f"💡 Why Selected: {reason}")
 
             formatted = self.format_content(doc.page_content)
             self.logger.info(f"📄 CV Content:\n{formatted}")
