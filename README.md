@@ -1,6 +1,7 @@
-# TalentMatch ATS – AI-Powered Applicant Tracking System
+# TalentMatch ATS : Applicant Tracking System
 
 ## Overview
+
 TalentMatch ATS is a sophisticated recruitment tool that uses artificial intelligence to revolutionize the hiring process. By analyzing resumes against job descriptions, it identifies the most qualified candidates with unprecedented accuracy. The system employs semantic search capabilities and RAG (Retrieval-Augmented Generation) technology to understand the context and requirements of positions better than traditional keyword-based systems.
 
 > **Note:** This is a demo version provided free of charge, created to illustrate my skills and capabilities in AI application development. It is not intended for commercial use.
