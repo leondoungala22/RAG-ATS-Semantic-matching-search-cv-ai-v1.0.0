@@ -10,6 +10,9 @@
 ehthumbs.db
 Thumbs.db
 
+
+
+src/data/
 # Python
 __pycache__/
 *.py[cod]
@@ -17,7 +20,9 @@ __pycache__/
 *.so
 .Python
 env/
-data/
+cv_ats_rag/
+Document/
+src/data/
 build/
 develop-eggs/
 dist/
